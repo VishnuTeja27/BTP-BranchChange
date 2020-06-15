@@ -18,12 +18,12 @@ struct VP
   int type=0;// 0 for student,1 for stream,2 for buffer
   int ID;
   string name;
+  int locked;// 1 for locked and 0 for open
 };
 struct EP
 {
   int priority;
-  //int weight;
-  int count;    // for duplicates for the buffer node
+  int count;    // for duplicate/multiple edges between same vertices
 };
 
 using G = boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS,VP,EP>;
@@ -56,35 +56,37 @@ struct my_visitor : boost::default_dijkstra_visitor {
     size_t &visited;
 };
 
-G rev_graph(G req_g,G cycle,vertex_iterator v)
+G rev_graph(G req_g,G cycle,vertex_iterator v)    // Function that constructs the request graph for next iteration
 {
 
   clear_vertex(*v,req_g);
   clear_vertex(*v,cycle);
 
   edge_iterator ei,ei_end;
-  print_graph(cycle);
-  if(num_edges(cycle)<1)
+
+  if(num_edges(cycle)<1 )     // If cycle is empty
   {
     return req_g;
   }
+
   for (boost::tie(ei, ei_end) = edges(cycle); ei != ei_end; ++ei)
   {
     auto source = boost::source ( *ei, cycle );
     auto target = boost::target ( *ei, cycle );
-    if(edge(target,source,req_g).second)
+    if(edge(target,source,req_g).second)      // If edge is already present increase the count
     {
       auto ed=edge(target,source,req_g).first;
       req_g[ed].count++;
     }
-    else
+    else                                    // else add the reverse of it
     {
       auto e=add_edge(target,source,req_g).first;
       auto re =edge(source,target,req_g).first;
       req_g[e].priority=req_g[re].priority;
       req_g[e].count=1;
     }
-    auto rem=edge(source,target,req_g).first;
+
+    auto rem=edge(source,target,req_g).first;     // removing the edge
     if(req_g[rem].count>1)req_g[rem].count--;
     else remove_edge(source,target,req_g);
   }
@@ -101,29 +103,24 @@ G add_graphs(G cycle,G p_sol)
 
   edge_iterator ei,ei_end;
 
-  cout<<"Partial solution(prev): \n";
-
-  print_graph(p_sol);
-
-
   for (boost::tie(ei, ei_end) = edges(cycle); ei != ei_end; ++ei)
   {
     auto source = boost::source ( *ei, cycle );
     auto target = boost::target ( *ei, cycle );
-    if(edge(target,source,p_sol).second)
+    if(edge(target,source,p_sol).second)      // If reverse edge is present in partial solution remove or reduce the count
     {
-      // auto ed =edge(target,source,cycle).first;
-      // if(p_sol[ed].count>1)p_sol[ed].count--;
-     remove_edge(target,source,p_sol);
+      auto ed =edge(target,source,p_sol).first;
+      if(p_sol[ed].count>1)p_sol[ed].count--;
+      else remove_edge(target,source,p_sol);
     }
-    else if(!edge(source,target,p_sol).second)
+    else if(!edge(source,target,p_sol).second)    // if the edge is not present in partial solution add the edge to it.
     {
       auto e=add_edge(source,target,p_sol).first;
       auto re =edge(source,target,cycle).first;
       p_sol[e].priority=cycle[re].priority;
       p_sol[e].count=1;
     }
-    else
+    else                                        // if already present increase the count
     {
       auto ed=edge(source,target,p_sol).first;
       p_sol[ed].count++;
@@ -138,7 +135,6 @@ G  dij(G g,G cycle,V start_vertex,V end_vertex,int k)
 {
 
     size_t visited;
-    // G cycle(k);
     std::vector<V>                         _pred(num_vertices(g),   g.null_vertex());
     std::vector<size_t>                    _dist(num_vertices(g),   -1ull);
 
@@ -158,40 +154,68 @@ G  dij(G g,G cycle,V start_vertex,V end_vertex,int k)
                 weight_map(boost::make_constant_property<E>(1ul))
             );
 
-        std::cout << "No path found\n";
+        // std::cout << "No path found\n";
         deque<V> temp_path;
         return cycle;
     } catch(my_visitor::done const&) {
-        std::cout << "\n "  ;
+        std::cout << ""  ;
     }
 
     size_t distance = distmap[end_vertex];
-    // std::cout << "Distance from #" << start_vertex << " to #" << end_vertex << ": " << distance << "\n";
 
     if (distance != size_t(-1)) {
         std::deque<V> path;
-        // cout<<"start\n";
         auto e=add_edge(end_vertex,start_vertex,cycle).first;
         auto re =edge(end_vertex,start_vertex,g).first;
         cycle[e].priority=g[re].priority;
-        cycle[e].count=g[re].count;
+        cycle[e].count=1;
         for (V current = end_vertex;
                 current != g.null_vertex()
                 && predmap[current] != current
                 && current != start_vertex;)
         {
             path.push_front(predmap[current]);
-            // cout<<current<<" "<<predmap[current]<<" \n";
             auto e=add_edge(predmap[current],current,cycle).first;
             auto re =edge(predmap[current],current,g).first;
             cycle[e].priority=g[re].priority;
-            cycle[e].count=g[re].count;
+            cycle[e].count=1;
             current = predmap[current];
         }
-
-        // std::cout << "Path from #" << start_vertex << " to #" << end_vertex << ": ";
-        // std::copy(path.begin(), path.end(), std::ostream_iterator<V>(std::cout, ", "));
-        // std::cout << end_vertex << "\n";
         return cycle;
     }
+}
+
+void print_solution(G g,int m)
+{
+  vertex_iterator v, vend;
+  int i=0;
+  ofstream myfile;
+  myfile.open("output.txt");
+  for (boost::tie(v, vend) = vertices(g); v != vend; ++v)   // loop for every student in request graph
+  {
+    if(i<m+1)
+    {
+      i++;
+      continue;
+    }
+    myfile<<"Student: "<<g[*v].name;
+    out_ei ei,ei_end;
+    pair <in_ei,in_ei> in_e;
+    pair <out_ei,out_ei> out_e;
+    if(out_degree(*v, g)<1)
+    {
+      myfile<<" did not change his branch\n";
+      continue;
+    }
+    in_e = in_edges(*v, g);
+    out_e=out_edges(*v, g);
+    // cout<<"ha "<<*in_e.first<<*in_e.second<<"\n";
+    auto from = boost::source ( *(in_e.first), g );
+    auto to=boost::target(*(out_e.first),g);
+
+    myfile<<" moved from: "<<g[from].name<<" to "<<g[to].name<<"\n";
+
+  }
+  myfile.close();
+  return;
 }
