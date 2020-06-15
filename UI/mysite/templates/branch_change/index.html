@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>IIT Palakkad</title>
+  <!-- <base href="/"> -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link href = "/static/css/bootstrap.min.css" rel="stylesheet" ></link>
+  <link href = "/static/css/album.css" rel = "stylesheet"></link>
+  <link href = "/static/css/custom.css" rel = "stylesheet"></link>
+  <link href = "/static/css/carousel.css" rel = "stylesheet"></link>
+  <link rel ="stylesheet" href="https://use.fontawesome.com/releases/v5.0.8/css/all.css">
+
+
+</head>
+<body>
+
+
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+
+     <div class="container-fluid">
+        <a class="navbar-brand" routerLink="/home"><img src="/static/images/logo.png" class="logosize" /></a>
+       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+         <span class="navbar-toggler-icon"></span>
+       </button>
+       <div class="collapse navbar-collapse" id="navbarResponsive">
+         <ul class="navbar-nav ml-auto">
+           <li class="nav-item ">
+             <a class="nav-link textsize" routerLink="/home">Home
+               <span class="sr-only">(current)</span>
+             </a>
+           </li>
+
+           <li class="nav-item dropdown">
+             <a class="nav-link dropdown-toggle textsize" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+               Academics
+             </a>
+             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+               <a class="dropdown-item"  routerLink="/courses">Courses</a>
+               <a class="dropdown-item"  routerLink="/ug-programs">UG Programs</a>
+               <a class="dropdown-item" routerLink="/academic-facilities">Academic Facilities</a>
+             </div>
+      </li>
+            <li class="nav-item">
+              <a class="nav-link textsize" routerLink="/faculty">Faculty</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle textsize" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Facilities
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item"  routerLink="/hostel-facilities">Hostel Facilities</a>
+                <a class="dropdown-item"  routerLink="/other-facilities">Other Facilities</a>
+              </div>
+            </li>
+
+           <li class="nav-item">
+             <a class="nav-link textsize" routerLink="/hostels">Hostels</a>
+           </li>
+
+           <li class="nav-item">
+             <a class="nav-link textsize" routerLink="/about">About</a>
+           </li>
+
+           <li class="nav-item" *ngIf='!_auth.loggedIn()'>
+             <a class="nav-link textsize" routerLink="/register">Register</a>
+           </li>
+           <li class="nav-item" *ngIf='!_auth.loggedIn()'>
+             <a class="nav-link textsize" routerLink="/login">LogIn</a>
+           </li>
+           <li class="nav-item" *ngIf='_auth.loggedIn()'>
+             <a class="nav-link textsize"(click)='_auth.loggedOut()' >Logout</a>
+         </ul>
+       </div>
+     </div>
+   </nav>
+
+<div class="container boxx">
+  <h4>Select file for Branch Reallocation</h4>
+          <form  method="post" enctype="multipart/form-data" id="js-upload-form" >
+            <div class="form-inline">
+              <div class="form-group">
+                <input type="file" name="file" id="js-upload-files" multiple>
+              </div>
+              <button type="submit" class="btn btn-sm btn-primary" id="js-upload-submit" >Upload file</button>
+            </div>
+          </form>
+
+          <a  href="/static/output.txt" download> Download Document </a>
+</div>
+<!--
+<div class="container">
+  <a class="btn btn-primary" href="/orders/add-param/">Add Parameters</a>
+
+</div> -->
+   <script src = "/static/js/jquery-3.3.1.slim.min.js"></script>
+   <script src = "/static/js/js_bootstrap.min.js"></script>
+</html>
